@@ -1,5 +1,5 @@
-const API_KEY = "637a0f2d5db14db38cc7ded9c13ce22f";
-const url = "https://newsapi.org/v2/everything?q=";
+const API_KEY = "pub_5040961eb6ba8762246ae0623340c411c6d74";
+const url = "https://newsdata.io/api/1/news?apikey=";
 
 window.addEventListener("load", () => fetchNews("India"));
 
@@ -8,10 +8,19 @@ function reload() {
 }
 
 async function fetchNews(query) {
-    const res = await fetch(`${url}${query}&apiKey=${API_KEY}`);
-    const data = await res.json();
-    bindData(data.articles);
+    try {
+        const res = await fetch(`${url}${API_KEY}&q=${encodeURIComponent(query)}`);
+        const data = await res.json();
+        if (res.ok) {
+            bindData(data.results);  // Use `data.results` as the array of articles
+        } else {
+            console.error(`Error: ${data.message}`);
+        }
+    } catch (error) {
+        console.error("Fetch failed:", error);
+    }
 }
+
 
 function bindData(articles) {
     const cardsContainer = document.getElementById("cards-container");
@@ -20,31 +29,33 @@ function bindData(articles) {
     cardsContainer.innerHTML = "";
 
     articles.forEach((article) => {
-        if (!article.urlToImage) return;
+        if (!article.image_url) return;  // Use 'image_url' instead of 'urlToImage'
         const cardClone = newsCardTemplate.content.cloneNode(true);
         fillDataInCard(cardClone, article);
         cardsContainer.appendChild(cardClone);
     });
 }
-
 function fillDataInCard(cardClone, article) {
     const newsImg = cardClone.querySelector("#news-img");
     const newsTitle = cardClone.querySelector("#news-title");
     const newsSource = cardClone.querySelector("#news-source");
     const newsDesc = cardClone.querySelector("#news-desc");
 
-    newsImg.src = article.urlToImage;
-    newsTitle.innerHTML = article.title;
-    newsDesc.innerHTML = article.description;
+    // Set a placeholder image if no image is provided
+    newsImg.src = article.image_url || 'https://via.placeholder.com/400x200';  
+    newsTitle.innerHTML = article.title || 'No Title Available';
+    newsDesc.innerHTML = article.description || 'No Description Available';
 
-    const date = new Date(article.publishedAt).toLocaleString("en-US", {
+    // If there's no creator or source, provide default text
+    const date = new Date(article.published_at).toLocaleString("en-US", {
         timeZone: "Asia/Jakarta",
     });
-
-    newsSource.innerHTML = `${article.source.name} · ${date}`;
+    const sourceName = article.creator && article.creator.length > 0 ? article.creator[0] : 'Unknown Source';
+    
+    newsSource.innerHTML = `${sourceName} · ${date}`;
 
     cardClone.firstElementChild.addEventListener("click", () => {
-        window.open(article.url, "_blank");
+        window.open(article.link || '#', "_blank");  // Fallback URL if no link is available
     });
 }
 

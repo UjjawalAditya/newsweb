@@ -20,8 +20,6 @@ async function fetchNews(query) {
         console.error("Fetch failed:", error);
     }
 }
-
-
 function bindData(articles) {
     const cardsContainer = document.getElementById("cards-container");
     const newsCardTemplate = document.getElementById("template-news-card");
@@ -38,6 +36,8 @@ function bindData(articles) {
         });
 }
 
+
+
 function fillDataInCard(cardClone, article) {
     const newsImg = cardClone.querySelector("#news-img");
     const newsTitle = cardClone.querySelector("#news-title");
@@ -45,19 +45,16 @@ function fillDataInCard(cardClone, article) {
     const newsDesc = cardClone.querySelector("#news-desc");
 
     // Set a placeholder image if no image is provided
-    newsImg.src = article.image_url || 'https://via.placeholder.com/400x200';  
+    newsImg.src = article.image_url || 'https://via.placeholder.com/400x200';
     newsTitle.innerHTML = article.title || 'No Title Available';
-    
-    // Truncate description if it's too long
-    const maxLength = 150; // Adjust the max length as needed
-    newsDesc.innerHTML = article.description && article.description.length > maxLength 
-        ? article.description.slice(0, maxLength) + '...'
-        : article.description || 'No Description Available';
+    newsDesc.innerHTML = article.description || 'No Description Available';
 
-    // If there's no creator or source, provide default text
-    const date = new Date(article.published_at).toLocaleString("en-US", {
+    // Validate and format the date
+    const date = article.published_at ? new Date(article.published_at).toLocaleString("en-US", {
         timeZone: "Asia/Jakarta",
-    });
+    }) : 'Date Not Available';
+    
+    // Validate and use the source
     const sourceName = article.creator && article.creator.length > 0 ? article.creator[0] : 'Unknown Source';
     
     newsSource.innerHTML = `${sourceName} · ${date}`;
@@ -66,7 +63,6 @@ function fillDataInCard(cardClone, article) {
         window.open(article.link || '#', "_blank");  // Fallback URL if no link is available
     });
 }
-
 
 
 

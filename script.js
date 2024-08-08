@@ -9,7 +9,7 @@ function reload() {
 
 async function fetchNews(query) {
     try {
-        const res = await fetch(`${url}${API_KEY}&q=${encodeURIComponent(query)}`);
+        const res = await fetch(`${url}${API_KEY}&q=${encodeURIComponent(query)}&language=en,hi`);
         const data = await res.json();
         if (res.ok) {
             bindData(data.results);  // Use `data.results` as the array of articles
@@ -28,13 +28,16 @@ function bindData(articles) {
 
     cardsContainer.innerHTML = "";
 
-    articles.forEach((article) => {
-        if (!article.image_url) return;  // Use 'image_url' instead of 'urlToImage'
-        const cardClone = newsCardTemplate.content.cloneNode(true);
-        fillDataInCard(cardClone, article);
-        cardsContainer.appendChild(cardClone);
-    });
+    articles
+        .filter(article => article.language === 'en' || article.language === 'hi') // Ensure language is English or Hindi
+        .forEach(article => {
+            if (!article.link) return; // Skip articles without a valid link
+            const cardClone = newsCardTemplate.content.cloneNode(true);
+            fillDataInCard(cardClone, article);
+            cardsContainer.appendChild(cardClone);
+        });
 }
+
 function fillDataInCard(cardClone, article) {
     const newsImg = cardClone.querySelector("#news-img");
     const newsTitle = cardClone.querySelector("#news-title");
@@ -42,14 +45,16 @@ function fillDataInCard(cardClone, article) {
     const newsDesc = cardClone.querySelector("#news-desc");
 
     // Set a placeholder image if no image is provided
-    newsImg.src = article.image_url || 'https://via.placeholder.com/400x200';  
+    newsImg.src = article.image_url || 'https://via.placeholder.com/400x200';
     newsTitle.innerHTML = article.title || 'No Title Available';
     newsDesc.innerHTML = article.description || 'No Description Available';
 
-    // If there's no creator or source, provide default text
-    const date = new Date(article.published_at).toLocaleString("en-US", {
+    // Validate and format the date
+    const date = article.published_at ? new Date(article.published_at).toLocaleString("en-US", {
         timeZone: "Asia/Jakarta",
-    });
+    }) : 'Date Not Available';
+    
+    // Validate and use the source
     const sourceName = article.creator && article.creator.length > 0 ? article.creator[0] : 'Unknown Source';
     
     newsSource.innerHTML = `${sourceName} · ${date}`;
@@ -58,6 +63,9 @@ function fillDataInCard(cardClone, article) {
         window.open(article.link || '#', "_blank");  // Fallback URL if no link is available
     });
 }
+
+
+
 
 let curSelectedNav = null;
 function onNavItemClick(id) {
